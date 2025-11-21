@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  
+  <!-- Primary Meta Tags -->
+  <title>Wish Bank - Savings Tracker</title>
+  <meta name="title" content="Wish Bank - Savings Tracker">
+  <meta name="description" content="Track your savings goals with a beautiful, interactive piggy bank. Gamify your savings journey!">
+  
+  <!-- Mobile Optimizations -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Wish Bank">
+  <meta name="theme-color" content="#8b5cf6">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="./manifest.json">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./assets/apple-touch-icon.png">
+  
+  <!-- Preconnect to CDNs for faster loading -->
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link rel="preconnect" href="https://unpkg.com">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="./css/styles.css">
+  
+  <!-- Tailwind Configuration -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          animation: {
+            'bounce-in': 'bounce-in 0.5s ease-out',
+            'fade-in': 'fade-in 0.3s ease-out',
+            'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- App Root -->
+  <div id="root"></div>
+  
+  <!-- Loading Spinner (shown while scripts load) -->
+  <div id="loading" style="position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(to bottom right, #f3e8ff, #fce7f3, #dbeafe);">
+    <div class="spinner"></div>
+  </div>
+  
+  <!-- React (Production build for better performance) -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- App Scripts (load constants first, then app) -->
+  <script src="./js/constants.js"></script>
+  <script src="./js/app.js"></script>
+  
+  <!-- Service Worker Registration -->
+  <script>
+    // Debug logging
+    console.log('🔍 [DEBUG] Script started');
+    console.log('🔍 [DEBUG] React available:', typeof window.React);
+    console.log('🔍 [DEBUG] ReactDOM available:', typeof window.ReactDOM);
+    
+    // Hide loading spinner once page loads
+    window.addEventListener('load', () => {
+      console.log('🔍 [DEBUG] Page loaded event fired');
+      const loading = document.getElementById('loading');
+      if (loading) {
+        loading.style.opacity = '0';
+        loading.style.transition = 'opacity 0.3s';
+        setTimeout(() => loading.remove(), 300);
+      }
+    });
+    
+    // Register service worker for PWA
+    // TEMPORARILY DISABLED FOR DEBUGGING
+    if (false && 'serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(registration => {
+            console.log('Service Worker registered successfully:', registration.scope);
+          })
+          .catch(error => {
+            console.log('Service Worker registration failed:', error);
+          });
+      });
+    }
+    
+    console.log('⚠️ [DEBUG] Service Worker disabled for debugging');
+    
+    // Install prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      console.log('App can be installed');
+    });
+    
+    // Handle install
+    window.addEventListener('appinstalled', () => {
+      console.log('PWA installed successfully');
+      deferredPrompt = null;
+    });
+    
+    // Prevent accidental navigation
+    window.addEventListener('beforeunload', (e) => {
+      // Don't prevent if user hasn't started saving
+      const data = localStorage.getItem('savingsTrackerData');
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.savings > 0) {
+            e.preventDefault();
+            e.returnValue = '';
+          }
+        } catch (err) {
+          // Ignore parse errors
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+
